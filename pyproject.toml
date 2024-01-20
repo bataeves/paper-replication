@@ -1,0 +1,40 @@
+[tool.poetry]
+name = "paper-replication"
+version = "0.0.1"
+description = "ML Papers replication repository"
+authors = [
+    "Bataev Evgenii <bataev.evgeny@gmail.com>",
+]
+readme = "README.md"
+
+[[tool.poetry.packages]]
+include = "papers"
+
+[tool.poetry.dependencies]
+python = ">=3.10"
+torch = "^2.1.2"
+torchvision = "^0.16.2"
+torchinfo = "^1.8.0"
+loguru = "^0.7.2"
+typer = "^0.9.0"
+requests = "^2.31.0"
+
+[tool.poetry.group.dev.dependencies]
+pre-commit = "^3.6.0"
+pytest = "^7.4.4"
+codecov = "^2.1.13"
+pytest-cov = "^4.1.0"
+mkdocs = "^1.5.3"
+mkdocstrings = "^0.24.0"
+mkdocstrings-python = "^1.8.0"
+mkdocs-material = "^9.5.4"
+pygments = "^2.17.2"
+
+[tool.black]
+line-length = 94
+
+[tool.mypy]
+python_version = "3.10"
+
+[tool.poetry.scripts]
+vit = 'papers.vit.cli:app'
