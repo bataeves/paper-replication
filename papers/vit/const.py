@@ -1,6 +1,7 @@
+WANDB_PROJECT = "paper-vit"
+
 # Create image size (from Table 3 in the ViT paper)
-IMG_HEIGHT = 224
-IMG_WIDTH = 224
+IMG_SIZE = 224
 
 PATCH_SIZE = 16
 

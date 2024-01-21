@@ -1,6 +1,20 @@
 # paper-replication
 
-Repository for ML paper replication projects
+Repository for ML paper replication projects. The purpose of this repo is to implement paper with the engineering best
+practices.
+
+# Structure
+
+What should
+
+* Basic implementation
+* Adding tests
+* Adding documentations
+* Adding demo application
+* Adding experimentation framework support ([Weights and Biases](https://wandb.ai/))
+* Hyperparameter tuning
+* Adding model observability
+* Implement different optimization techniques and track
 
 # Papers replicated
 

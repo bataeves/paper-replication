@@ -1,0 +1,16 @@
+program: "" # TODO: Add
+method: bayes
+metric:
+  name: validation_loss # TODO: change
+  goal: minimize
+parameters:
+  layers:
+    # How many Transformer Encoder blocks are there? (each of these will contain a MSA block and MLP block)
+    values: [ 8, 12, 16, 24 ]
+  hidden_size:
+    # This is the embedding dimension throughout the architecture
+    values: [ 768, 1024, 1280 ]
+  mlp_size:
+    values: [ 3072, 4096, 5120 ]
+  heads:
+    values: [ 12, 16, 16 ]

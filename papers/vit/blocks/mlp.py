@@ -4,3 +4,38 @@ a collection of layers with a forward() method). In the ViT Paper, the authors r
 contains two torch.nn.Linear() layers with a torch.nn.GELU() non-linearity activation in between them (section 3.1) and
 a torch.nn.Dropout() layers after each (Appendex B.1).
 """
+from torch import nn
+
+
+class MultilayerPerceptronBlock(nn.Module):
+    """Creates a layer normalized multilayer perceptron block ("MLP block" for short)."""
+
+    def __init__(self, embedding_dim: int = 768, mlp_size: int = 3072, dropout: float = 0.1):
+        """
+
+        Args:
+            embedding_dim: Hidden Size D from Table 1 for ViT-Base
+            mlp_size: MLP size from Table 1 for ViT-Base
+            dropout: Dropout from Table 3 for ViT-Base
+        """
+        super().__init__()
+
+        self.layer_norm = nn.LayerNorm(normalized_shape=embedding_dim)
+
+        self.mlp = nn.Sequential(
+            nn.Linear(in_features=embedding_dim, out_features=mlp_size),
+            nn.GELU(),  # "The MLP contains two layers with a GELU non-linearity (section 3.1)."
+            nn.Dropout(p=dropout),
+            nn.Linear(
+                in_features=mlp_size,  # needs to take same in_features as out_features of layer above
+                out_features=embedding_dim,
+            ),  # take back to embedding_dim
+            nn.Dropout(
+                p=dropout
+            ),  # "Dropout, when used, is applied after every dense layer.."
+        )
+
+    def forward(self, x):
+        x = self.layer_norm(x)
+        x = self.mlp(x)
+        return x
