@@ -1,4 +1,5 @@
 import torch
+import lightning as pl
 
 
 def set_seeds(seed: int = 42):
@@ -7,6 +8,7 @@ def set_seeds(seed: int = 42):
     Args:
         seed (int, optional): Random seed to set. Defaults to 42.
     """
+    pl.seed_everything()
     # Set the seed for general torch operations
     torch.manual_seed(seed)
     # Set the seed for CUDA torch operations (ones that happen on the GPU)

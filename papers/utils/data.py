@@ -7,8 +7,10 @@ from loguru import logger
 from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 
+from papers.const import DATA_CACHE_DIR
 
-def download_data(source: str, destination: str, remove_source: bool = True) -> Path:
+
+def download_data(source: str, destination: Path | str, remove_source: bool = True) -> Path:
     """Downloads a zipped dataset from source and unzips to destination.
 
     Args:
@@ -24,7 +26,7 @@ def download_data(source: str, destination: str, remove_source: bool = True) -> 
                       destination="pizza_steak_sushi")
     """
     # Setup path to data folder
-    data_path = Path("data/")
+    data_path = DATA_CACHE_DIR
     image_path = data_path / destination
 
     # If the image folder doesn't exist, download it and prepare it...
@@ -54,8 +56,8 @@ def download_data(source: str, destination: str, remove_source: bool = True) -> 
 
 
 def create_dataloaders(
-    train_dir: str,
-    test_dir: str,
+    train_dir: Path | str,
+    test_dir: Path | str,
     transform: transforms.Compose,
     batch_size: int,
     num_workers: int = os.cpu_count() or 1,
@@ -84,8 +86,8 @@ def create_dataloaders(
                                num_workers=4)
     """
     # Use ImageFolder to create dataset(s)
-    train_data = datasets.ImageFolder(train_dir, transform=transform)
-    test_data = datasets.ImageFolder(test_dir, transform=transform)
+    train_data = datasets.ImageFolder(str(train_dir), transform=transform)
+    test_data = datasets.ImageFolder(str(test_dir), transform=transform)
 
     # Get class names
     class_names = train_data.classes
@@ -97,6 +99,7 @@ def create_dataloaders(
         shuffle=True,
         num_workers=num_workers,
         pin_memory=True,
+        persistent_workers=True,
     )
     test_dataloader = DataLoader(
         test_data,
@@ -104,6 +107,7 @@ def create_dataloaders(
         shuffle=False,
         num_workers=num_workers,
         pin_memory=True,
+        persistent_workers=True,
     )
 
     return train_dataloader, test_dataloader, class_names

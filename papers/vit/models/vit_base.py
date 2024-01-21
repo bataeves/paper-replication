@@ -48,7 +48,7 @@ class ViTBase(nn.Module):
         self.embedding_dim = embedding_dim
         self.mlp_size = mlp_size
         self.num_heads = num_heads
-        self.img_height, self.img_width = img_size, img_size
+        self.img_size = img_size
         self.patch_size = patch_size
         self.color_channels = color_channels
 

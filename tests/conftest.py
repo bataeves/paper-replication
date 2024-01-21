@@ -1,8 +1,7 @@
+import lightning as pl
 import pytest
-
-from papers.utils.torch import set_seeds
 
 
 @pytest.fixture(autouse=True)
 def seeds():
-    set_seeds()
+    pl.seed_everything()
