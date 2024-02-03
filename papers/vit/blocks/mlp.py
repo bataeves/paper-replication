@@ -27,12 +27,10 @@ class MultilayerPerceptronBlock(nn.Module):
             nn.GELU(),  # "The MLP contains two layers with a GELU non-linearity (section 3.1)."
             nn.Dropout(p=dropout),
             nn.Linear(
-                in_features=mlp_size,  # needs to take same in_features as out_features of layer above
+                in_features=mlp_size,
                 out_features=embedding_dim,
-            ),  # take back to embedding_dim
-            nn.Dropout(
-                p=dropout
-            ),  # "Dropout, when used, is applied after every dense layer.."
+            ),
+            nn.Dropout(p=dropout),
         )
 
     def forward(self, x):

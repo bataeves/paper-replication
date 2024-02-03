@@ -2,17 +2,20 @@ import lightning as L
 import torch
 import typer
 
-from papers.const import DATA_CACHE_DIR
-from papers.utils.data import download_data, create_dataloaders
+from papers.tasks.image.classification import ImageClassificationTask
 from papers.vit.data import get_transforms
 from papers.vit.models.vit_base import ViTBase
 from papers.vit.trainer import MulticlassLightningModule
 
-app = typer.Typer()
+app = typer.Typer(
+    help="Vision transformer implementation based on PyTorch Paper Replicating article.",
+    short_help="Vision transformer implementation",
+)
 
 
 @app.command()
-def train_pss(
+def train(
+    dataset: str,
     img_size: int = 224,
     epochs: int = 7,
     batch_size: int = 32,
@@ -20,16 +23,17 @@ def train_pss(
     """
     Train pizza, steak, sushi model
     """
-    image_path = download_data(
-        source="https://github.com/mrdbourke/pytorch-deep-learning/raw/main/data/pizza_steak_sushi.zip",
-        destination=DATA_CACHE_DIR / "pizza_steak_sushi",
-    )
-    train_dataloader, test_dataloader, class_names = create_dataloaders(
-        train_dir=image_path / "train",
-        test_dir=image_path / "test",
-        transform=get_transforms(img_width=img_size, img_height=img_size),
-        batch_size=batch_size,
-    )
+    task = ImageClassificationTask.from_code(dataset)
+    class_names = task.class_names
+
+    dl_kwargs = {
+        "transform": get_transforms(img_width=img_size, img_height=img_size),
+        "batch_size": batch_size,
+    }
+
+    train_dataloader = task.dataloader_train(**dl_kwargs)
+    test_dataloader = task.dataloader_test(**dl_kwargs)
+
     model = ViTBase(
         num_classes=len(class_names),
     )
@@ -44,9 +48,7 @@ def train_pss(
         optimizer=optimizer,
         loss=torch.nn.CrossEntropyLoss(),
     )
-    trainer = L.Trainer(
-        max_epochs=epochs,
-    )
+    trainer = L.Trainer(max_epochs=epochs)
     trainer.fit(lmodule, train_dataloader)
     trainer.test(lmodule, test_dataloader)
 

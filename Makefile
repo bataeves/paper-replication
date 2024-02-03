@@ -8,3 +8,6 @@ lock:
 
 format:
 	pre-commit run -a
+
+test:
+	python -m pytest tests
