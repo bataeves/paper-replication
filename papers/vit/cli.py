@@ -6,6 +6,7 @@ from papers.tasks.image.classification import ImageClassificationTask
 from papers.vit.data import get_transforms
 from papers.vit.models.vit_base import ViTBase
 from papers.vit.trainer import MulticlassLightningModule
+from papers.wandb import get_pl_logger
 
 app = typer.Typer(
     help="Vision transformer implementation based on PyTorch Paper Replicating article.",
@@ -23,19 +24,14 @@ def train(
     """
     Train pizza, steak, sushi model
     """
-    task = ImageClassificationTask.from_code(dataset)
-    class_names = task.class_names
-
-    dl_kwargs = {
-        "transform": get_transforms(img_width=img_size, img_height=img_size),
-        "batch_size": batch_size,
-    }
-
-    train_dataloader = task.dataloader_train(**dl_kwargs)
-    test_dataloader = task.dataloader_test(**dl_kwargs)
-
+    task = ImageClassificationTask.from_code(
+        dataset,
+        transform=get_transforms(img_width=img_size, img_height=img_size),
+        batch_size=batch_size,
+    )
     model = ViTBase(
-        num_classes=len(class_names),
+        num_classes=len(task.class_names),
+        img_size=img_size,
     )
     optimizer = torch.optim.Adam(
         params=model.parameters(),
@@ -48,9 +44,12 @@ def train(
         optimizer=optimizer,
         loss=torch.nn.CrossEntropyLoss(),
     )
-    trainer = L.Trainer(max_epochs=epochs)
-    trainer.fit(lmodule, train_dataloader)
-    trainer.test(lmodule, test_dataloader)
+
+    trainer = L.Trainer(
+        max_epochs=epochs,
+        logger=get_pl_logger(),
+    )
+    trainer.fit(lmodule, task)
 
 
 @app.command()

@@ -1,21 +1,30 @@
 import os
 import zipfile
-from abc import ABC
 from pathlib import Path
 
+import lightning as pl
 import requests
 from loguru import logger
-from torch.utils.data import DataLoader
 
 DEFAULT_CACHE_DIRECTORY = Path("~/.papers/cache").expanduser()
 SUCCESS_FILENAME = "_SUCCESS"
 
 
-class BaseTask(ABC):
+class BaseTask(pl.LightningDataModule):
     code: str
     """
     Machine unique code for the ML task
     """
+
+    def prepare_data(self) -> None:
+        directory_path = self.cache_directory
+        success_file = directory_path / SUCCESS_FILENAME
+        if not success_file.is_file():
+            logger.info(f"Success file {success_file} not found, downloading the data")
+            self.download_data(directory_path)
+            success_file.touch()
+        else:
+            logger.info(f"Success file found: {success_file}")
 
     def download_data(self, destination: Path):
         raise NotImplementedError()
@@ -27,14 +36,6 @@ class BaseTask(ABC):
         if not directory_path.is_dir():
             logger.info(f"Creating cache directory: {directory_path}")
             directory_path.mkdir(parents=True, exist_ok=True)
-        success_file = directory_path / SUCCESS_FILENAME
-        if not success_file.is_file():
-            logger.info(f"Success file {success_file} not found, downloading the data")
-            self.download_data(directory_path)
-            success_file.touch()
-        else:
-            logger.info(f"Success file found: {success_file}")
-
         return directory_path
 
     @staticmethod
@@ -73,9 +74,3 @@ class BaseTask(ABC):
         # Remove .zip file
         if remove_source:
             os.remove(temporary_file)
-
-    def dataloader_train(self, **kwargs) -> DataLoader:
-        raise NotImplementedError("train_dataloader is not implemented")
-
-    def dataloader_test(self, **kwargs) -> DataLoader:
-        raise NotImplementedError("test_dataloader is not implemented")

@@ -4,11 +4,17 @@ from os.path import dirname, splitext
 from typing import List, Iterable
 
 from loguru import logger
+from torchvision.transforms import Compose
 
 from papers.tasks.image.image import ImageTask
 
 
 class ImageClassificationTask(ImageTask):
+    def __init__(self, batch_size: int = 32, transform: Compose | None = None):
+        super().__init__()
+        self.transform = transform
+        self.batch_size = batch_size
+
     @property
     def class_names(self) -> List[str]:
         raise NotImplementedError()

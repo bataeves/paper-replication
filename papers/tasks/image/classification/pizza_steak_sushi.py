@@ -1,10 +1,14 @@
 from pathlib import Path
 
+from lightning.pytorch.utilities.types import TRAIN_DATALOADERS, EVAL_DATALOADERS
 from torch.utils.data import DataLoader
 from torchvision import datasets
-from torchvision.transforms import Compose
 
 from papers.tasks.image.classification import ImageClassificationTask
+
+SOURCE_URL = (
+    "https://github.com/mrdbourke/pytorch-deep-learning/raw/main/data/pizza_steak_sushi.zip"
+)
 
 
 class PizzaSteakSushiTask(ImageClassificationTask):
@@ -12,7 +16,7 @@ class PizzaSteakSushiTask(ImageClassificationTask):
 
     def download_data(self, destination: Path):
         self.download_unpack_zip(
-            source="https://github.com/mrdbourke/pytorch-deep-learning/raw/main/data/pizza_steak_sushi.zip",
+            source=SOURCE_URL,
             destination=destination,
         )
 
@@ -20,18 +24,12 @@ class PizzaSteakSushiTask(ImageClassificationTask):
     def class_names(self):
         return ["pizza", "steak", "sushi"]
 
-    @property
-    def train_dir(self) -> Path:
-        return self.cache_directory / "train"
+    def train_dataloader(self) -> TRAIN_DATALOADERS:
+        train_dir = self.cache_directory / "train"
+        dataset = datasets.ImageFolder(str(train_dir), transform=self.transform)
+        return DataLoader(dataset)
 
-    @property
-    def test_dir(self) -> Path:
-        return self.cache_directory / "test"
-
-    def dataloader_train(self, transform: Compose | None = None, **kwargs) -> DataLoader:
-        dataset = datasets.ImageFolder(str(self.train_dir), transform=transform)
-        return DataLoader(dataset, **kwargs)
-
-    def dataloader_test(self, transform: Compose | None = None, **kwargs) -> DataLoader:
-        dataset = datasets.ImageFolder(str(self.test_dir), transform=transform)
-        return DataLoader(dataset, **kwargs)
+    def test_dataloader(self) -> EVAL_DATALOADERS:
+        test_dir = self.cache_directory / "test"
+        dataset = datasets.ImageFolder(str(test_dir), transform=self.transform)
+        return DataLoader(dataset)
