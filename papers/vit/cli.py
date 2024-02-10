@@ -1,12 +1,13 @@
-import lightning as L
-import torch
-import typer
+from typing import Annotated, Tuple
 
+import lightning as pl
+import typer
+import wandb
+
+from papers.integrations.wandb import init, get_pl_logger
 from papers.tasks.image.classification import ImageClassificationTask
 from papers.vit.data import get_transforms
-from papers.vit.models.vit_base import ViTBase
-from papers.vit.trainer import MulticlassLightningModule
-from papers.wandb import get_pl_logger
+from papers.vit.model import ViTModel
 
 app = typer.Typer(
     help="Vision transformer implementation based on PyTorch Paper Replicating article.",
@@ -17,44 +18,49 @@ app = typer.Typer(
 @app.command()
 def train(
     dataset: str,
-    img_size: int = 224,
-    epochs: int = 7,
-    batch_size: int = 32,
+    img_size: Annotated[
+        int, typer.Option(help="Preprocessing image size", rich_help_panel="Data loading")
+    ] = 224,
+    epochs: Annotated[
+        int, typer.Option(help="Number of training epochs", rich_help_panel="Training")
+    ] = 7,
+    learning_rate: Annotated[
+        float, typer.Option(help="Learning rate", rich_help_panel="Training")
+    ] = 3e-3,
+    betas: Annotated[
+        Tuple[float, float], typer.Option(help="Optimizer Beta", rich_help_panel="Training")
+    ] = (0.9, 0.999),
+    weight_decay: Annotated[
+        float,
+        typer.Option(
+            help="Weight decay",
+            rich_help_panel="Training",
+        ),
+    ] = 0.3,
 ):
-    """
-    Train pizza, steak, sushi model
-    """
-    task = ImageClassificationTask.from_code(
-        dataset,
+    init(group=dataset)
+
+    task = ImageClassificationTask.get_task_class(dataset)
+    data_module = task(
         transform=get_transforms(img_width=img_size, img_height=img_size),
-        batch_size=batch_size,
     )
-    model = ViTBase(
-        num_classes=len(task.class_names),
+    wandb.config["data"] = data_module.get_params()
+
+    model = ViTModel(
+        num_classes=len(data_module.class_names),
         img_size=img_size,
-    )
-    optimizer = torch.optim.Adam(
-        params=model.parameters(),
-        lr=3e-3,
-        betas=(0.9, 0.999),
-        weight_decay=0.3,
-    )
-    lmodule = MulticlassLightningModule(
-        model=model,
-        optimizer=optimizer,
-        loss=torch.nn.CrossEntropyLoss(),
+        learning_rate=learning_rate,
+        betas=betas,
+        weight_decay=weight_decay,
     )
 
-    trainer = L.Trainer(
+    trainer = pl.Trainer(
         max_epochs=epochs,
+        deterministic=True,
         logger=get_pl_logger(),
     )
-    trainer.fit(lmodule, task)
-
-
-@app.command()
-def demo():
-    pass
+    trainer.fit(model, datamodule=data_module)
+    trainer.test(model, datamodule=data_module)
 
 
 if __name__ == "__main__":

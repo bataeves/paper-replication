@@ -1,6 +1,7 @@
 import os
 import zipfile
 from pathlib import Path
+from typing import Dict, Any
 
 import lightning as pl
 import requests
@@ -74,3 +75,8 @@ class BaseTask(pl.LightningDataModule):
         # Remove .zip file
         if remove_source:
             os.remove(temporary_file)
+
+    def get_params(self) -> Dict[str, Any]:
+        return {
+            "code": self.code,
+        }

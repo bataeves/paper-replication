@@ -1,7 +1,7 @@
 import pytest
 import torch
 
-from papers.vit.models.vit_base import ViTBase
+from papers.vit.model import ViTModel
 
 
 # Values based on https://www.learnpytorch.io/08_pytorch_paper_replicating/#327-exploring-table-1
@@ -16,7 +16,7 @@ from papers.vit.models.vit_base import ViTBase
 def test_vit_base(img_size, patch_size, layers, embedding_dim, mlp_size, heads):
     color_channels = 3
     num_classes = 30
-    model = ViTBase(
+    model = ViTModel(
         img_size=img_size,
         patch_size=patch_size,
         num_transformer_layers=layers,

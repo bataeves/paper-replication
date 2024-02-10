@@ -11,7 +11,7 @@
 - [x] Basic implementation
 - [x] Adding tests
 - [ ] Adding documentation
-- [ ] Adding experimentation framework support ([Weights and Biases](https://wandb.ai/))
+- [x] Adding experimentation framework support ([Weights and Biases](https://wandb.ai/))
 - [ ] Checkpointing support
 - [ ] Adding model observability
 - [ ] Hyperparameter tuning

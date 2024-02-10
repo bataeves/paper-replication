@@ -1,3 +1,8 @@
+from typing import Tuple
+
+import torch
+from lightning import LightningModule
+from lightning.pytorch.utilities.types import OptimizerLRScheduler
 from torch import nn
 
 from papers.vit.blocks.patch_position import PatchPositionBlock
@@ -6,7 +11,7 @@ from papers.vit.const import IMG_SIZE, PATCH_SIZE
 from papers.vit.layers.patch_embedding import PatchEmbedding
 
 
-class ViTBase(nn.Module):
+class ViTModel(LightningModule):
     def __init__(
         self,
         embedding_dim: int = 768,
@@ -20,6 +25,10 @@ class ViTBase(nn.Module):
         embedding_dropout: float = 0.1,
         color_channels: int = 3,
         num_classes: int = 1000,
+        loss: torch.nn.Module | None = None,
+        learning_rate: float = 3e-3,
+        betas: Tuple[float, float] = (0.9, 0.999),
+        weight_decay: float = 0.3,
     ):
         """
         Vision Transformer Model
@@ -43,6 +52,10 @@ class ViTBase(nn.Module):
         assert (
             img_size % patch_size == 0
         ), f"Image size must be divisible by patch size. {img_size=}, {patch_size=}."
+
+        self.learning_rate = learning_rate
+        self.betas = betas
+        self.weight_decay = weight_decay
 
         self.num_transformer_layers = num_transformer_layers
         self.embedding_dim = embedding_dim
@@ -76,6 +89,9 @@ class ViTBase(nn.Module):
             nn.LayerNorm(normalized_shape=embedding_dim),
             nn.Linear(in_features=embedding_dim, out_features=num_classes),
         )
+        self.loss = loss or torch.nn.CrossEntropyLoss()
+
+        self.save_hyperparameters()
 
     def forward(self, x):
         # Create patch+position embedding
@@ -88,3 +104,26 @@ class ViTBase(nn.Module):
         x = self.classifier(x[:, 0])
 
         return x
+
+    def _calc_loss(self, batch):
+        x, y = batch
+        y_pred = self.forward(x)
+        loss = self.loss(y_pred, y)
+        return loss
+
+    def training_step(self, batch, batch_idx):
+        return self._calc_loss(batch)
+
+    def validation_step(self, batch, batch_idx):
+        self.log("val_loss", self._calc_loss(batch))
+
+    def test_step(self, batch, batch_idx):
+        self.log("test_loss", self._calc_loss(batch))
+
+    def configure_optimizers(self) -> OptimizerLRScheduler:
+        return torch.optim.Adam(
+            params=self.parameters(),
+            lr=self.learning_rate,
+            betas=self.betas,
+            weight_decay=self.weight_decay,
+        )
