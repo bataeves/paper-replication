@@ -1,7 +1,7 @@
 install-local:
 	pip install -U "poetry<=1.8.0"
-    poetry install
-    pre-commit install
+	poetry install
+	pre-commit install
 
 lock:
 	poetry lock
